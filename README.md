@@ -1,12 +1,12 @@
-# Couchbase Go Analytics Client
+# Couchbase Go Operational Insights Client
 
-Go client for [Couchbase](https://couchbase.com) Analytics.
+Go client for [Couchbase](https://couchbase.com) Operational Insights.
 
 ## Useful Links
 ### Documentation
 You can explore our API reference through godoc at [https://pkg.go.dev/github.com/couchbase/gocbinsights](https://pkg.go.dev/github.com/couchbase/gocbinsights).
 
-[//]: # (You can also find documentation for the Go Analytics SDK on the [official Couchbase docs]&#40;https://docs.couchbase.com/go-columnar-sdk/current/hello-world/overview.html&#41;.)
+You can also find documentation for the Go Operational Insights SDK on the [official Couchbase docs](https://docs.couchbase.com).
 
 ## Installing
 
@@ -113,7 +113,7 @@ You can run tests in the usual Go way:
 
 `go test -race ./... --connstr https://... --username ... --password ... --database ... --scope ...`
 
-Which will execute tests against the specified Analytics instance.
+Which will execute tests against the specified Operational Insights instance.
 See the `testmain_test.go` file for more information on command line arguments.
 
 ## Linting
@@ -124,7 +124,7 @@ To run:
 `golangci-lint run`
 
 ## License
-Copyright 2025 Couchbase Inc.
+Copyright 2026 Couchbase Inc.
 
 Licensed under the Apache License, Version 2.0.
 
