@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/couchbase/gocbanalytics/internal/logging"
+	"github.com/couchbase/gocbinsights/internal/logging"
 )
 
 // analyticsResponse builds a JSON analytics response body with optional fields.

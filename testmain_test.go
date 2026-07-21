@@ -1,4 +1,4 @@
-package cbanalytics_test
+package cbinsights_test
 
 import (
 	"context"
@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	cbanalytics "github.com/couchbase/gocbanalytics"
-	"github.com/couchbase/gocbanalytics/internal/leakcheck"
+	cbinsights "github.com/couchbase/gocbinsights"
+	"github.com/couchbase/gocbinsights/internal/leakcheck"
 )
 
 var TestOpts TestOptions
@@ -72,13 +72,13 @@ func TestMain(m *testing.M) {
 
 		var preLogTotal uint64
 
-		for i := 0; i < int(cbanalytics.LogTrace+1); i++ {
+		for i := 0; i < int(cbinsights.LogTrace+1); i++ {
 			count := atomic.LoadUint64(&globalTestLogger.LogCount[i])
 			preLogTotal += count
-			log.Printf("  (%s): %d", logLevelToString(cbanalytics.LogLevel(i)), count)
+			log.Printf("  (%s): %d", logLevelToString(cbinsights.LogLevel(i)), count)
 		}
 
-		abnormalLogCount := atomic.LoadUint64(&globalTestLogger.LogCount[cbanalytics.LogError]) + atomic.LoadUint64(&globalTestLogger.LogCount[cbanalytics.LogWarn])
+		abnormalLogCount := atomic.LoadUint64(&globalTestLogger.LogCount[cbinsights.LogError]) + atomic.LoadUint64(&globalTestLogger.LogCount[cbinsights.LogWarn])
 		if abnormalLogCount > 0 {
 			log.Printf("Detected unexpected logging, failing")
 
@@ -91,10 +91,10 @@ func TestMain(m *testing.M) {
 
 		var postLogTotal uint64
 
-		for i := 0; i < int(cbanalytics.LogTrace+1); i++ {
+		for i := 0; i < int(cbinsights.LogTrace+1); i++ {
 			count := atomic.LoadUint64(&globalTestLogger.LogCount[i])
 			postLogTotal += count
-			log.Printf("  (%s): %d", logLevelToString(cbanalytics.LogLevel(i)), count)
+			log.Printf("  (%s): %d", logLevelToString(cbinsights.LogLevel(i)), count)
 		}
 
 		if preLogTotal != postLogTotal {
@@ -112,11 +112,11 @@ func TestMain(m *testing.M) {
 }
 
 func setupAnalytics() {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr, cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr, cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
 	if err != nil {
 		panic(err)
 	}
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		if err != nil {
 			panic(err)
@@ -164,50 +164,50 @@ func envFlagString(envName, name, value, usage string) *string {
 
 var globalTestLogger *testLogger
 
-func DefaultOptions() *cbanalytics.ClusterOptions {
-	return cbanalytics.NewClusterOptions().SetSecurityOptions(cbanalytics.NewSecurityOptions().SetDisableServerCertificateVerification(true)).SetLogger(globalTestLogger)
+func DefaultOptions() *cbinsights.ClusterOptions {
+	return cbinsights.NewClusterOptions().SetSecurityOptions(cbinsights.NewSecurityOptions().SetDisableServerCertificateVerification(true)).SetLogger(globalTestLogger)
 }
 
 type testLogger struct {
-	Parent           cbanalytics.Logger
+	Parent           cbinsights.Logger
 	LogCount         []uint64
 	suppressWarnings uint32
 }
 
 func (logger *testLogger) Error(format string, v ...interface{}) {
-	atomic.AddUint64(&logger.LogCount[cbanalytics.LogError], 1)
+	atomic.AddUint64(&logger.LogCount[cbinsights.LogError], 1)
 
 	logger.Parent.Error(fmt.Sprintf("[error] %s", format), v...)
 }
 
 func (logger *testLogger) Warn(format string, v ...interface{}) {
 	if atomic.LoadUint32(&logger.suppressWarnings) == 1 || strings.Contains(format, "server certificate verification is disabled") {
-		atomic.AddUint64(&logger.LogCount[cbanalytics.LogInfo], 1)
+		atomic.AddUint64(&logger.LogCount[cbinsights.LogInfo], 1)
 
 		logger.Parent.Info(fmt.Sprintf("[info] %s", format), v...)
 
 		return
 	}
 
-	atomic.AddUint64(&logger.LogCount[cbanalytics.LogWarn], 1)
+	atomic.AddUint64(&logger.LogCount[cbinsights.LogWarn], 1)
 
 	logger.Parent.Warn(fmt.Sprintf("[warn] %s", format), v...)
 }
 
 func (logger *testLogger) Info(format string, v ...interface{}) {
-	atomic.AddUint64(&logger.LogCount[cbanalytics.LogInfo], 1)
+	atomic.AddUint64(&logger.LogCount[cbinsights.LogInfo], 1)
 
 	logger.Parent.Info(fmt.Sprintf("[info] %s", format), v...)
 }
 
 func (logger *testLogger) Debug(format string, v ...interface{}) {
-	atomic.AddUint64(&logger.LogCount[cbanalytics.LogDebug], 1)
+	atomic.AddUint64(&logger.LogCount[cbinsights.LogDebug], 1)
 
 	logger.Parent.Debug(fmt.Sprintf("[debug] %s", format), v...)
 }
 
 func (logger *testLogger) Trace(format string, v ...interface{}) {
-	atomic.AddUint64(&logger.LogCount[cbanalytics.LogTrace], 1)
+	atomic.AddUint64(&logger.LogCount[cbinsights.LogTrace], 1)
 
 	logger.Parent.Trace(fmt.Sprintf("[trace] %s", format), v...)
 }
@@ -222,23 +222,23 @@ func (logger *testLogger) SuppressWarnings(suppress bool) {
 
 func createTestLogger() *testLogger {
 	return &testLogger{
-		Parent:           cbanalytics.NewVerboseLogger(),
-		LogCount:         make([]uint64, cbanalytics.LogTrace+1),
+		Parent:           cbinsights.NewVerboseLogger(),
+		LogCount:         make([]uint64, cbinsights.LogTrace+1),
 		suppressWarnings: 0,
 	}
 }
 
-func logLevelToString(level cbanalytics.LogLevel) string {
+func logLevelToString(level cbinsights.LogLevel) string {
 	switch level {
-	case cbanalytics.LogError:
+	case cbinsights.LogError:
 		return "error"
-	case cbanalytics.LogWarn:
+	case cbinsights.LogWarn:
 		return "warn"
-	case cbanalytics.LogInfo:
+	case cbinsights.LogInfo:
 		return "info"
-	case cbanalytics.LogDebug:
+	case cbinsights.LogDebug:
 		return "debug"
-	case cbanalytics.LogTrace:
+	case cbinsights.LogTrace:
 		return "trace"
 	}
 

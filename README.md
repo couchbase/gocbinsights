@@ -4,7 +4,7 @@ Go client for [Couchbase](https://couchbase.com) Analytics.
 
 ## Useful Links
 ### Documentation
-You can explore our API reference through godoc at [https://pkg.go.dev/github.com/couchbase/gocbanalytics](https://pkg.go.dev/github.com/couchbase/gocbanalytics).
+You can explore our API reference through godoc at [https://pkg.go.dev/github.com/couchbase/gocbinsights](https://pkg.go.dev/github.com/couchbase/gocbinsights).
 
 [//]: # (You can also find documentation for the Go Analytics SDK on the [official Couchbase docs]&#40;https://docs.couchbase.com/go-columnar-sdk/current/hello-world/overview.html&#41;.)
 
@@ -12,12 +12,12 @@ You can explore our API reference through godoc at [https://pkg.go.dev/github.co
 
 To install the latest stable version, run:
 ```bash
-go get github.com/couchbase/gocbanalytics@latest
+go get github.com/couchbase/gocbinsights@latest
 ```
 
 To install the latest developer version, run:
 ```bash
-go get github.com/couchbase/gocbanalytics@main
+go get github.com/couchbase/gocbinsights@main
 ```
 
 ## Getting Started
@@ -30,7 +30,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/couchbase/gocbanalytics"
+	"github.com/couchbase/gocbinsights"
 )
 
 func main() {
@@ -40,14 +40,14 @@ func main() {
 		password = "..."
 	)
 	
-	cluster, err := cbanalytics.NewCluster(
+	cluster, err := cbinsights.NewCluster(
 		connStr,
-		cbanalytics.NewBasicAuthCredential(username, password),
+		cbinsights.NewBasicAuthCredential(username, password),
 		// The third parameter is optional.
 		// This example sets the default server query timeout to 3 minutes,
 		// that is the timeout value sent to the query server.
-		cbanalytics.NewClusterOptions().SetTimeoutOptions(
-			cbanalytics.NewTimeoutOptions().SetQueryTimeout(3*time.Minute),
+		cbinsights.NewClusterOptions().SetTimeoutOptions(
+			cbinsights.NewTimeoutOptions().SetQueryTimeout(3*time.Minute),
 		),
 	)
 	handleErr(err)
@@ -57,7 +57,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	printRows := func(result *cbanalytics.QueryResult) {
+	printRows := func(result *cbinsights.QueryResult) {
 		for row := result.NextRow(); row != nil; row = result.NextRow() {
 			var content map[string]interface{}
 
@@ -79,7 +79,7 @@ func main() {
 	result, err = cluster.ExecuteQuery(
 		ctx,
 		"select ?=1",
-		cbanalytics.NewQueryOptions().SetPositionalParameters([]interface{}{1}),
+		cbinsights.NewQueryOptions().SetPositionalParameters([]interface{}{1}),
 	)
 	handleErr(err)
 
@@ -89,7 +89,7 @@ func main() {
 	result, err = cluster.ExecuteQuery(
 		ctx,
 		"select $foo=1",
-		cbanalytics.NewQueryOptions().SetNamedParameters(map[string]interface{}{"foo": 1}),
+		cbinsights.NewQueryOptions().SetNamedParameters(map[string]interface{}{"foo": 1}),
 	)
 	handleErr(err)
 
@@ -129,5 +129,5 @@ Copyright 2025 Couchbase Inc.
 Licensed under the Apache License, Version 2.0.
 
 See
-[LICENSE](https://github.com/couchbase/cbanalytics/blob/main/LICENSE)
+[LICENSE](https://github.com/couchbase/cbinsights/blob/main/LICENSE)
 for further details.

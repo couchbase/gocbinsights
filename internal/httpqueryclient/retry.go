@@ -14,7 +14,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/couchbase/gocbanalytics/internal/leakcheck"
+	"github.com/couchbase/gocbinsights/internal/leakcheck"
 )
 
 // retryableRequestOptions holds the common configuration for a retryable HTTP request.

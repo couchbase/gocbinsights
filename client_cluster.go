@@ -1,4 +1,4 @@
-package cbanalytics
+package cbinsights
 
 import (
 	"crypto/tls"
@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/couchbase/gocbanalytics/internal/httpqueryclient"
+	"github.com/couchbase/gocbinsights/internal/httpqueryclient"
 )
 
 type clusterClient interface {

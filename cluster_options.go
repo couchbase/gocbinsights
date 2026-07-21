@@ -1,4 +1,4 @@
-package cbanalytics
+package cbinsights
 
 import (
 	"crypto/x509"

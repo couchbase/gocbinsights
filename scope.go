@@ -1,4 +1,4 @@
-package cbanalytics
+package cbinsights
 
 // Scope represents an Analytics scope.
 type Scope struct {

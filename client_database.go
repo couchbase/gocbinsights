@@ -1,9 +1,9 @@
-package cbanalytics
+package cbinsights
 
 import (
 	"time"
 
-	"github.com/couchbase/gocbanalytics/internal/httpqueryclient"
+	"github.com/couchbase/gocbinsights/internal/httpqueryclient"
 )
 
 type databaseClient interface {

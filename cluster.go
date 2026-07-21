@@ -1,9 +1,9 @@
-// Package cbanalytics provides an SDK for interacting with Couchbase Analytics clusters.
+// Package cbinsights provides an SDK for interacting with Couchbase Analytics clusters.
 // The main entry point for the SDK is the Cluster struct, which allows users to perform operations on the data against
 // a Couchbase Enterprise Analytics cluster.
 // The Cluster struct is created using the NewCluster function, which takes an HTTP endpoint, a credential for
 // authentication, and optional cluster options.
-package cbanalytics
+package cbinsights
 
 import (
 	"net/url"

@@ -1,4 +1,4 @@
-package cbanalytics_test
+package cbinsights_test
 
 import (
 	"context"
@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
-	cbanalytics "github.com/couchbase/gocbanalytics"
+	cbinsights "github.com/couchbase/gocbinsights"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBasicQuery(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr, cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr, cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -47,11 +47,11 @@ func TestBasicQuery(t *testing.T) {
 }
 
 func TestBasicBufferedQuery(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr, cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr, cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
 
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -63,7 +63,7 @@ func TestBasicBufferedQuery(t *testing.T) {
 		res, err := queryable.ExecuteQuery(ctx, "FROM RANGE(0, 99) AS i SELECT RAW i")
 		require.NoError(tt, err)
 
-		actualRows, meta, err := cbanalytics.BufferQueryResult[int](res)
+		actualRows, meta, err := cbinsights.BufferQueryResult[int](res)
 		require.NoError(tt, err)
 
 		for i := 0; i < 100; i++ {
@@ -75,13 +75,13 @@ func TestBasicBufferedQuery(t *testing.T) {
 }
 
 func TestOperationTimeout(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr,
-		cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr,
+		cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
 		DefaultOptions(),
 	)
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -94,7 +94,7 @@ func TestOperationTimeout(t *testing.T) {
 			_, err := queryable.ExecuteQuery(ctx, "SELECT sleep('foo', 5000);")
 			require.ErrorIs(ttt, err, context.DeadlineExceeded)
 
-			var analyticsErr *cbanalytics.AnalyticsError
+			var analyticsErr *cbinsights.AnalyticsError
 
 			require.ErrorAs(ttt, err, &analyticsErr)
 
@@ -114,7 +114,7 @@ func TestOperationTimeout(t *testing.T) {
 			_, err := queryable.ExecuteQuery(ctx, "SELECT sleep('foo', 5000);")
 			require.ErrorIs(ttt, err, context.Canceled)
 
-			var analyticsErr *cbanalytics.AnalyticsError
+			var analyticsErr *cbinsights.AnalyticsError
 
 			require.ErrorAs(ttt, err, &analyticsErr)
 
@@ -123,13 +123,13 @@ func TestOperationTimeout(t *testing.T) {
 	})
 
 	t.Run("Timeout", func(tt *testing.T) {
-		cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr,
-			cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
-			DefaultOptions().SetTimeoutOptions(cbanalytics.NewTimeoutOptions().SetQueryTimeout(1*time.Second)),
+		cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr,
+			cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
+			DefaultOptions().SetTimeoutOptions(cbinsights.NewTimeoutOptions().SetQueryTimeout(1*time.Second)),
 		)
 		require.NoError(tt, err)
 
-		defer func(cluster *cbanalytics.Cluster) {
+		defer func(cluster *cbinsights.Cluster) {
 			err := cluster.Close()
 			assert.NoError(tt, err)
 		}(cluster)
@@ -138,9 +138,9 @@ func TestOperationTimeout(t *testing.T) {
 			ctx := context.Background()
 
 			_, err := queryable.ExecuteQuery(ctx, "SELECT sleep('foo', 5000);")
-			require.ErrorIs(ttt, err, cbanalytics.ErrTimeout)
+			require.ErrorIs(ttt, err, cbinsights.ErrTimeout)
 
-			var analyticsErr *cbanalytics.AnalyticsError
+			var analyticsErr *cbinsights.AnalyticsError
 
 			require.ErrorAs(ttt, err, &analyticsErr)
 
@@ -150,13 +150,13 @@ func TestOperationTimeout(t *testing.T) {
 }
 
 func TestQueryError(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr,
-		cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr,
+		cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
 		DefaultOptions(),
 	)
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -166,13 +166,13 @@ func TestQueryError(t *testing.T) {
 		defer cancel()
 
 		_, err := queryable.ExecuteQuery(ctx, "SELEC 123;")
-		require.ErrorIs(tt, err, cbanalytics.ErrQuery)
+		require.ErrorIs(tt, err, cbinsights.ErrQuery)
 
-		var analyticsErr *cbanalytics.AnalyticsError
+		var analyticsErr *cbinsights.AnalyticsError
 
 		require.ErrorAs(tt, err, &analyticsErr)
 
-		var queryErr *cbanalytics.QueryError
+		var queryErr *cbinsights.QueryError
 
 		require.ErrorAs(tt, err, &queryErr)
 
@@ -182,13 +182,13 @@ func TestQueryError(t *testing.T) {
 }
 
 func TestInvalidCredential(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr,
-		cbanalytics.NewBasicAuthCredential(TestOpts.Username, "prettyunlikelytobeapassword!"),
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr,
+		cbinsights.NewBasicAuthCredential(TestOpts.Username, "prettyunlikelytobeapassword!"),
 		DefaultOptions(),
 	)
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -198,9 +198,9 @@ func TestInvalidCredential(t *testing.T) {
 		defer cancel()
 
 		_, err := queryable.ExecuteQuery(ctx, "SELECT 123;")
-		require.ErrorIs(tt, err, cbanalytics.ErrInvalidCredential)
+		require.ErrorIs(tt, err, cbinsights.ErrInvalidCredential)
 
-		var analyticsErr *cbanalytics.AnalyticsError
+		var analyticsErr *cbinsights.AnalyticsError
 
 		require.ErrorAs(tt, err, &analyticsErr)
 	})
@@ -211,13 +211,13 @@ func TestUnmarshaler(t *testing.T) {
 		Err: errors.New("something went wrong"), // nolint: err113
 	}
 
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr,
-		cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr,
+		cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
 		DefaultOptions().SetUnmarshaler(unmarshaler),
 	)
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -239,13 +239,13 @@ func TestUnmarshaler(t *testing.T) {
 }
 
 func TestDNSLookupError(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster("http://imnotarealboy",
-		cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
+	cluster, err := cbinsights.NewCluster("http://imnotarealboy",
+		cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
 		DefaultOptions(),
 	)
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -270,7 +270,7 @@ func (e *ErrorUnmarshaler) Unmarshal(_ []byte, _ interface{}) error {
 	return e.Err
 }
 
-func assertMeta(t *testing.T, meta *cbanalytics.QueryMetadata, resultCount uint64) {
+func assertMeta(t *testing.T, meta *cbinsights.QueryMetadata, resultCount uint64) {
 	assert.Empty(t, meta.Warnings)
 	assert.NotEmpty(t, meta.RequestID)
 
@@ -282,7 +282,7 @@ func assertMeta(t *testing.T, meta *cbanalytics.QueryMetadata, resultCount uint6
 }
 
 type Queryable interface {
-	ExecuteQuery(ctx context.Context, statement string, opts ...*cbanalytics.QueryOptions) (*cbanalytics.QueryResult, error)
+	ExecuteQuery(ctx context.Context, statement string, opts ...*cbinsights.QueryOptions) (*cbinsights.QueryResult, error)
 }
 
 func ExecuteQueryAgainst(t *testing.T, queryables []Queryable, fn func(tt *testing.T, queryable Queryable)) {
@@ -293,7 +293,7 @@ func ExecuteQueryAgainst(t *testing.T, queryables []Queryable, fn func(tt *testi
 	}
 }
 
-func CollectRows[T any](t *testing.T, res *cbanalytics.QueryResult) []T {
+func CollectRows[T any](t *testing.T, res *cbinsights.QueryResult) []T {
 	var actualRows []T
 
 	for row := res.NextRow(); row != nil; row = res.NextRow() {

@@ -1,4 +1,4 @@
-package cbanalytics_test
+package cbinsights_test
 
 import (
 	"context"
@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	cbanalytics "github.com/couchbase/gocbanalytics"
+	cbinsights "github.com/couchbase/gocbinsights"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 type DeferredQueryable interface {
-	StartQuery(ctx context.Context, statement string, opts ...*cbanalytics.StartQueryOptions) (*cbanalytics.QueryHandle, error)
+	StartQuery(ctx context.Context, statement string, opts ...*cbinsights.StartQueryOptions) (*cbinsights.QueryHandle, error)
 }
 
 func StartQueryAgainst(t *testing.T, queryables []DeferredQueryable, fn func(tt *testing.T, queryable DeferredQueryable)) {
@@ -25,10 +25,10 @@ func StartQueryAgainst(t *testing.T, queryables []DeferredQueryable, fn func(tt 
 }
 
 func TestStartQueryGoldenPath(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr, cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr, cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -41,7 +41,7 @@ func TestStartQueryGoldenPath(t *testing.T) {
 		require.NoError(tt, err)
 		require.NotNil(tt, handle)
 
-		var resultHandle *cbanalytics.QueryResultHandle
+		var resultHandle *cbinsights.QueryResultHandle
 
 		require.Eventually(tt, func() bool {
 			status, fetchErr := handle.FetchStatus(ctx)
@@ -77,10 +77,10 @@ func TestStartQueryGoldenPath(t *testing.T) {
 }
 
 func TestStartQueryCancel(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr, cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr, cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -99,10 +99,10 @@ func TestStartQueryCancel(t *testing.T) {
 }
 
 func TestStartQueryDiscardResults(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr, cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr, cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -115,7 +115,7 @@ func TestStartQueryDiscardResults(t *testing.T) {
 		require.NoError(tt, err)
 		require.NotNil(tt, handle)
 
-		var resultHandle *cbanalytics.QueryResultHandle
+		var resultHandle *cbinsights.QueryResultHandle
 
 		require.Eventually(tt, func() bool {
 			status, fetchErr := handle.FetchStatus(ctx)
@@ -142,10 +142,10 @@ func TestStartQueryDiscardResults(t *testing.T) {
 // TestFetchResult_DefaultUnmarshaler verifies that FetchResults uses the default unmarshaler
 // when no FetchResultsOptions are provided.
 func TestFetchResult_DefaultUnmarshaler(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr, cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr, cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -158,7 +158,7 @@ func TestFetchResult_DefaultUnmarshaler(t *testing.T) {
 		require.NoError(tt, err)
 		require.NotNil(tt, handle)
 
-		var resultHandle *cbanalytics.QueryResultHandle
+		var resultHandle *cbinsights.QueryResultHandle
 
 		require.Eventually(tt, func() bool {
 			status, fetchErr := handle.FetchStatus(ctx)
@@ -196,10 +196,10 @@ func TestFetchResult_DefaultUnmarshaler(t *testing.T) {
 // TestFetchResult_CustomUnmarshaler verifies that FetchResults uses a custom unmarshaler
 // provided via FetchResultsOptions, overriding the default.
 func TestFetchResult_CustomUnmarshaler(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr, cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr, cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -212,7 +212,7 @@ func TestFetchResult_CustomUnmarshaler(t *testing.T) {
 		require.NoError(tt, err)
 		require.NotNil(tt, handle)
 
-		var resultHandle *cbanalytics.QueryResultHandle
+		var resultHandle *cbinsights.QueryResultHandle
 
 		require.Eventually(tt, func() bool {
 			status, fetchErr := handle.FetchStatus(ctx)
@@ -234,7 +234,7 @@ func TestFetchResult_CustomUnmarshaler(t *testing.T) {
 		// Call FetchResults with a custom unmarshaler that always returns an error.
 		customErr := errors.New("custom unmarshal error") //nolint:err113
 		res, err := resultHandle.FetchResults(ctx,
-			cbanalytics.NewFetchResultOptions().SetUnmarshaler(&ErrorUnmarshaler{Err: customErr}),
+			cbinsights.NewFetchResultOptions().SetUnmarshaler(&ErrorUnmarshaler{Err: customErr}),
 		)
 		require.NoError(tt, err)
 
@@ -252,13 +252,13 @@ func TestFetchResult_CustomUnmarshaler(t *testing.T) {
 }
 
 func TestStartQueryError(t *testing.T) {
-	cluster, err := cbanalytics.NewCluster(TestOpts.OriginalConnStr,
-		cbanalytics.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
+	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr,
+		cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password),
 		DefaultOptions(),
 	)
 	require.NoError(t, err)
 
-	defer func(cluster *cbanalytics.Cluster) {
+	defer func(cluster *cbinsights.Cluster) {
 		err := cluster.Close()
 		assert.NoError(t, err)
 	}(cluster)
@@ -268,13 +268,13 @@ func TestStartQueryError(t *testing.T) {
 		defer cancel()
 
 		_, err := queryable.StartQuery(ctx, "SELEC 123;")
-		require.ErrorIs(tt, err, cbanalytics.ErrQuery)
+		require.ErrorIs(tt, err, cbinsights.ErrQuery)
 
-		var analyticsErr *cbanalytics.AnalyticsError
+		var analyticsErr *cbinsights.AnalyticsError
 
 		require.ErrorAs(tt, err, &analyticsErr)
 
-		var queryErr *cbanalytics.QueryError
+		var queryErr *cbinsights.QueryError
 
 		require.ErrorAs(tt, err, &queryErr)
 

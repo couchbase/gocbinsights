@@ -49,7 +49,7 @@ type DefaultLogger struct {
 func NewDefaultLogger(level LogLevel, offset int) *DefaultLogger {
 	return &DefaultLogger{
 		Level:    level,
-		GoLogger: log.New(os.Stderr, "cbanalytics ", log.Lmicroseconds|log.Lshortfile),
+		GoLogger: log.New(os.Stderr, "cbinsights ", log.Lmicroseconds|log.Lshortfile),
 		Offset:   offset,
 	}
 }

@@ -1,4 +1,4 @@
-package cbanalytics
+package cbinsights
 
 // Database represents an Analytics database and provides access to Scope.
 type Database struct {

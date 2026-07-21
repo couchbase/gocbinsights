@@ -1,4 +1,4 @@
-package cbanalytics
+package cbinsights
 
 const (
 	versionStr = "v1.1.0"
