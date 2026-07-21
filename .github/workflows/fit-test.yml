@@ -1,0 +1,45 @@
+name: Run FIT Testing
+
+on:
+  schedule:
+    - cron: '25 2 * * *'
+
+  workflow_dispatch:
+    inputs:
+      preset:
+        description: FIT presets or preset groups to run, comma-separated. (`fit preset list`)
+        required: false
+        type: string
+        default: enterprise-analytics-multi-lite
+
+      collect_extra_diagnostics:
+        description: Collect additional diagnostics (includes cbcollect, is slower)
+        required: false
+        type: boolean
+        default: true
+
+      channel:
+        description: fit-cli install channel ("latest" or "ci").
+        required: false
+        type: string
+        default: ci
+
+      performer_tag:
+        description: Tag of the insights-go-fit-performer image to test against.
+        required: false
+        type: string
+        default: main
+
+permissions:
+  id-token: write
+  contents: read
+  checks: write
+
+jobs:
+  fit:
+    uses: couchbaselabs/fit-cli/.github/workflows/fit-cli.yaml@main
+    with:
+      preset: ${{ vars.FIT_CLI_PRESET || inputs.preset || 'enterprise-analytics-multi-lite' }}
+      collect_extra_diagnostics: ${{ inputs.collect_extra_diagnostics == '' && true || inputs.collect_extra_diagnostics }}
+      performer: insights-go-fit-performer:${{ inputs.performer_tag || 'main' }}
+      channel: ${{ vars.FIT_CLI_CHANNEL || inputs.channel || 'ci' }}
