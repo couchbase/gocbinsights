@@ -8,18 +8,18 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  # push:
-  #   branches:
-  #     - master
-  #     - v2.*
+  push:
+    branches:
+      - main
+      - v1.*
 
-  #   tags:
-  #     - '*'
+    tags:
+      - '*'
 
-  #   paths-ignore:
-  #     - '**/*.md'
-  #     - '.golangci.yml'
-  #     - 'LICENSE'
+    paths-ignore:
+      - '**/*.md'
+      - '.golangci.yml'
+      - 'LICENSE'
 
   workflow_dispatch:
     inputs:
@@ -31,7 +31,7 @@ jobs:
   publish:
     name: Build & Publish Docker Image
     runs-on: ubuntu-latest
-    permissions:g
+    permissions:
       contents: read
       packages: write
 
