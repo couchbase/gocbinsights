@@ -64,14 +64,14 @@ func (c *Client) handleQueryResponse(resp *http.Response, state *retryState, sta
 		}
 
 		if readErr != nil {
-			return nil, retryActionReturn, newAnalyticsError(newObfuscateErrorWrapper("failed to read response body", readErr), statement,
+			return nil, retryActionReturn, newQueryError(newObfuscateErrorWrapper("failed to read response body", readErr), statement,
 				c.host, resp.StatusCode, state.retries).
 				withErrorText(string(respBody))
 		}
 
-		cErr := parseAnalyticsErrorResponse(respBody, statement, c.host, resp.StatusCode, state.lastCode, state.lastMessage, state.retries)
+		cErr := parseQueryErrorResponse(respBody, statement, c.host, resp.StatusCode, state.lastCode, state.lastMessage, state.retries)
 		if cErr != nil {
-			first, retriable := isAnalyticsErrorRetriable(cErr)
+			first, retriable := isQueryErrorRetriable(cErr)
 			if !retriable {
 				return nil, retryActionReturn, cErr
 			}
@@ -84,13 +84,13 @@ func (c *Client) handleQueryResponse(resp *http.Response, state *retryState, sta
 			}
 
 			// Return the enriched error in case retry is denied.
-			return nil, retryActionRetry, newAnalyticsError(cErr.InnerError, statement, c.host, resp.StatusCode, state.retries).
+			return nil, retryActionRetry, newQueryError(cErr.InnerError, statement, c.host, resp.StatusCode, state.retries).
 				withErrors(cErr.Errors).
 				withErrorText(string(respBody)).
 				withLastDetail(state.lastCode, state.lastMessage)
 		}
 
-		return nil, retryActionReturn, newAnalyticsError(
+		return nil, retryActionReturn, newQueryError(
 			errors.New("query returned non-200 status code but no errors in body"), //nolint:err113
 			statement,
 			c.host,
@@ -112,7 +112,7 @@ func (c *Client) handleQueryResponse(resp *http.Response, state *retryState, sta
 			c.logger.Debug("Failed to close response body: %v", closeErr)
 		}
 
-		return nil, retryActionReturn, newAnalyticsError(newObfuscateErrorWrapper("failed to parse success response body", err),
+		return nil, retryActionReturn, newQueryError(newObfuscateErrorWrapper("failed to parse success response body", err),
 			statement,
 			c.host,
 			resp.StatusCode,
@@ -125,7 +125,7 @@ func (c *Client) handleQueryResponse(resp *http.Response, state *retryState, sta
 	if peeked == nil {
 		err := streamer.Err()
 		if err != nil {
-			return nil, retryActionReturn, newAnalyticsError(err,
+			return nil, retryActionReturn, newQueryError(err,
 				statement,
 				c.host,
 				resp.StatusCode,
@@ -135,7 +135,7 @@ func (c *Client) handleQueryResponse(resp *http.Response, state *retryState, sta
 
 		meta, metaErr := streamer.MetaData()
 		if metaErr != nil {
-			return nil, retryActionReturn, newAnalyticsError(metaErr,
+			return nil, retryActionReturn, newQueryError(metaErr,
 				statement,
 				c.host,
 				resp.StatusCode,
@@ -144,9 +144,9 @@ func (c *Client) handleQueryResponse(resp *http.Response, state *retryState, sta
 				withLastDetail(state.lastCode, state.lastMessage)
 		}
 
-		cErr := parseAnalyticsErrorResponse(meta, statement, c.host, resp.StatusCode, state.lastCode, state.lastMessage, state.retries)
+		cErr := parseQueryErrorResponse(meta, statement, c.host, resp.StatusCode, state.lastCode, state.lastMessage, state.retries)
 		if cErr != nil {
-			first, retriable := isAnalyticsErrorRetriable(cErr)
+			first, retriable := isQueryErrorRetriable(cErr)
 			if !retriable {
 				return nil, retryActionReturn, cErr
 			}
@@ -159,7 +159,7 @@ func (c *Client) handleQueryResponse(resp *http.Response, state *retryState, sta
 			}
 
 			// Return the enriched error in case retry is denied.
-			return nil, retryActionRetry, newAnalyticsError(cErr.InnerError, statement, c.host, resp.StatusCode, state.retries).
+			return nil, retryActionRetry, newQueryError(cErr.InnerError, statement, c.host, resp.StatusCode, state.retries).
 				withErrors(cErr.Errors).
 				withErrorText(string(meta)).
 				withLastDetail(state.lastCode, state.lastMessage)
@@ -175,16 +175,16 @@ func (c *Client) handleQueryResponse(resp *http.Response, state *retryState, sta
 	}, retryActionReturn, nil
 }
 
-func parseAnalyticsErrorResponse(respBody []byte, statement, endpoint string, statusCode int, lastCode uint32, lastMsg string, retries uint32) *QueryError {
+func parseQueryErrorResponse(respBody []byte, statement, endpoint string, statusCode int, lastCode uint32, lastMsg string, retries uint32) *QueryError {
 	if statusCode == 401 {
-		return newAnalyticsError(ErrInvalidCredential, statement, endpoint, statusCode, retries)
+		return newQueryError(ErrInvalidCredential, statement, endpoint, statusCode, retries)
 	}
 
-	var rawRespParse jsonAnalyticsErrorResponse
+	var rawRespParse jsonInsightsErrorResponse
 
 	parseErr := json.Unmarshal(respBody, &rawRespParse)
 	if parseErr != nil {
-		return newAnalyticsError(
+		return newQueryError(
 			newObfuscateErrorWrapper("failed to parse response errors", parseErr),
 			statement,
 			endpoint,
@@ -197,17 +197,17 @@ func parseAnalyticsErrorResponse(respBody []byte, statement, endpoint string, st
 
 	if len(rawRespParse.Errors) == 0 {
 		if statusCode == 503 {
-			return newAnalyticsError(ErrServiceUnavailable, statement, endpoint, statusCode, retries)
+			return newQueryError(ErrServiceUnavailable, statement, endpoint, statusCode, retries)
 		}
 
 		return nil
 	}
 
-	var respParse []jsonAnalyticsError
+	var respParse []jsonInsightsError
 
 	parseErr = json.Unmarshal(rawRespParse.Errors, &respParse)
 	if parseErr != nil {
-		return newAnalyticsError(
+		return newQueryError(
 			newObfuscateErrorWrapper("failed to parse response errors", parseErr),
 			statement,
 			endpoint,
@@ -231,13 +231,13 @@ func parseAnalyticsErrorResponse(respBody []byte, statement, endpoint string, st
 		}
 	}
 
-	return newAnalyticsError(ErrAnalytics, statement, endpoint, statusCode, retries).
+	return newQueryError(ErrInsights, statement, endpoint, statusCode, retries).
 		withLastDetail(lastCode, lastMsg).
 		withErrorText(string(respBody)).
 		withErrors(errDescs)
 }
 
-func isAnalyticsErrorRetriable(cErr *QueryError) (*ErrorDesc, bool) {
+func isQueryErrorRetriable(cErr *QueryError) (*ErrorDesc, bool) {
 	if errors.Is(cErr, ErrServiceUnavailable) {
 		return nil, true
 	}

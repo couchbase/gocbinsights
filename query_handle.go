@@ -38,7 +38,7 @@ func (qs *QueryStatus) ResultsReady() bool {
 // ResultHandle should only be called when ResultsReady returns true.
 func (qs *QueryStatus) ResultHandle() (*QueryResultHandle, error) {
 	if qs.resultHandle == nil {
-		return nil, newAnalyticsError(ErrAnalytics, "", "", 0, 0).
+		return nil, newInsightsError(ErrInsights, "", "", 0, 0).
 			withMessage("ResultHandle should only be called when ResultsReady returns true")
 	}
 

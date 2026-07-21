@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type jsonAnalyticsMetrics struct {
+type jsonQueryMetrics struct {
 	ElapsedTime      string `json:"elapsedTime"`
 	ExecutionTime    string `json:"executionTime"`
 	ResultCount      uint64 `json:"resultCount"`
@@ -16,22 +16,22 @@ type jsonAnalyticsMetrics struct {
 	ProcessedObjects uint64 `json:"processedObjects,omitempty"`
 }
 
-type jsonAnalyticsWarning struct {
+type jsonQueryWarning struct {
 	Code    uint32 `json:"code"`
 	Message string `json:"msg"`
 }
 
-type jsonAnalyticsResponse struct {
-	RequestID       string                 `json:"requestID"`
-	ClientContextID string                 `json:"clientContextID"`
-	Status          string                 `json:"status"`
-	Warnings        []jsonAnalyticsWarning `json:"warnings"`
-	Metrics         jsonAnalyticsMetrics   `json:"metrics"`
-	Signature       interface{}            `json:"signature"`
-	Handle          string                 `json:"handle,omitempty"`
+type jsonQueryResponse struct {
+	RequestID       string             `json:"requestID"`
+	ClientContextID string             `json:"clientContextID"`
+	Status          string             `json:"status"`
+	Warnings        []jsonQueryWarning `json:"warnings"`
+	Metrics         jsonQueryMetrics   `json:"metrics"`
+	Signature       interface{}        `json:"signature"`
+	Handle          string             `json:"handle,omitempty"`
 }
 
-func (meta *QueryMetadata) fromData(data jsonAnalyticsResponse) {
+func (meta *QueryMetadata) fromData(data jsonQueryResponse) {
 	metrics := QueryMetrics{
 		ElapsedTime:      0,
 		ExecutionTime:    0,
@@ -51,7 +51,7 @@ func (meta *QueryMetadata) fromData(data jsonAnalyticsResponse) {
 	meta.Warnings = warnings
 }
 
-func (metrics *QueryMetrics) fromData(data jsonAnalyticsMetrics) {
+func (metrics *QueryMetrics) fromData(data jsonQueryMetrics) {
 	elapsedTime, _ := time.ParseDuration(data.ElapsedTime)
 	executionTime, _ := time.ParseDuration(data.ExecutionTime)
 	metrics.ElapsedTime = elapsedTime
@@ -61,7 +61,7 @@ func (metrics *QueryMetrics) fromData(data jsonAnalyticsMetrics) {
 	metrics.ProcessedObjects = data.ProcessedObjects
 }
 
-func (warning *QueryWarning) fromData(data jsonAnalyticsWarning) {
+func (warning *QueryWarning) fromData(data jsonQueryWarning) {
 	warning.Code = data.Code
 	warning.Message = data.Message
 }

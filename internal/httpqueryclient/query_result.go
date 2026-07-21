@@ -1,6 +1,6 @@
 package httpqueryclient
 
-// QueryRowReader providers access to the rows of an analytics query
+// QueryRowReader providers access to the rows of an Operational Insights query
 type QueryRowReader struct {
 	streamer   *queryStreamer
 	statement  string
@@ -33,7 +33,7 @@ func (q *QueryRowReader) Err() error {
 		return metaErr
 	}
 
-	cErr := parseAnalyticsErrorResponse(meta, q.statement, q.endpoint, q.statusCode, 0, "", 0)
+	cErr := parseQueryErrorResponse(meta, q.statement, q.endpoint, q.statusCode, 0, "", 0)
 	if cErr != nil {
 		return cErr
 	}

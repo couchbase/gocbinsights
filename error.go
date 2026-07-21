@@ -6,8 +6,8 @@ import (
 	"fmt"
 )
 
-// ErrAnalytics is the base error for any Analytics error that is not captured by a more specific error.
-var ErrAnalytics = errors.New("analytics error")
+// ErrInsights is the base error for any Operational Insights error that is not captured by a more specific error.
+var ErrInsights = errors.New("operational insights error")
 
 // ErrInvalidCredential occurs when invalid credentials are provided leading to errors in things like authentication.
 var ErrInvalidCredential = errors.New("invalid credential")
@@ -29,19 +29,19 @@ var ErrClosed = errors.New("closed")
 // ErrUnmarshal occurs when an entity could not be unmarshalled.
 var ErrUnmarshal = errors.New("unmarshalling error")
 
-// ErrServiceUnavailable occurs when the Analytics service, or a part of the system in the path to it, is unavailable.
+// ErrServiceUnavailable occurs when the Operational Insights service, or a part of the system in the path to it, is unavailable.
 var ErrServiceUnavailable = errors.New("service unavailable")
 
 // ErrQueryNotFound occurs when a query handle or its results are not found,
 // typically because they have been discarded or canceled.
 var ErrQueryNotFound = errors.New("query not found")
 
-type analyticsErrorDesc struct {
+type insightsErrorDesc struct {
 	Code    uint32
 	Message string
 }
 
-func (e analyticsErrorDesc) MarshalJSON() ([]byte, error) {
+func (e insightsErrorDesc) MarshalJSON() ([]byte, error) {
 	b, err := json.Marshal(struct {
 		Code    uint32 `json:"code"`
 		Message string `json:"msg"`
@@ -50,30 +50,30 @@ func (e analyticsErrorDesc) MarshalJSON() ([]byte, error) {
 		Message: e.Message,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal analytics error description: %s", err) // nolint: err113, errorlint
+		return nil, fmt.Errorf("failed to marshal operational insights error description: %s", err) // nolint: err113, errorlint
 	}
 
 	return b, nil
 }
 
-// AnalyticsError occurs when an error is encountered while interacting with the Analytics service.
-type AnalyticsError struct {
+// InsightsError occurs when an error is encountered while interacting with the Operational Insights service.
+type InsightsError struct {
 	cause   error
 	message string
 
-	errors           []analyticsErrorDesc
+	errors           []insightsErrorDesc
 	statement        string
 	endpoint         string
 	httpResponseCode int
 	retries          uint32
 }
 
-func newAnalyticsError(cause error, statement, endpoint string, statusCode int, retries uint32) AnalyticsError {
+func newInsightsError(cause error, statement, endpoint string, statusCode int, retries uint32) InsightsError {
 	if cause == nil {
-		cause = ErrAnalytics
+		cause = ErrInsights
 	}
 
-	return AnalyticsError{
+	return InsightsError{
 		cause:            cause,
 		errors:           nil,
 		statement:        statement,
@@ -84,21 +84,21 @@ func newAnalyticsError(cause error, statement, endpoint string, statusCode int, 
 	}
 }
 
-func (e AnalyticsError) withMessage(message string) *AnalyticsError {
+func (e InsightsError) withMessage(message string) *InsightsError {
 	e.message = message
 
 	return &e
 }
 
-// Error returns the string representation of an Analytics error.
-func (e AnalyticsError) Error() string {
+// Error returns the string representation of an Operational Insights error.
+func (e InsightsError) Error() string {
 	errBytes, _ := json.Marshal(struct {
-		Statement        string               `json:"statement,omitempty"`
-		Errors           []analyticsErrorDesc `json:"errors,omitempty"`
-		Message          string               `json:"message,omitempty"`
-		Endpoint         string               `json:"endpoint,omitempty"`
-		HTTPResponseCode int                  `json:"status_code,omitempty"`
-		Retries          uint32               `json:"retries,omitempty"`
+		Statement        string              `json:"statement,omitempty"`
+		Errors           []insightsErrorDesc `json:"errors,omitempty"`
+		Message          string              `json:"message,omitempty"`
+		Endpoint         string              `json:"endpoint,omitempty"`
+		HTTPResponseCode int                 `json:"status_code,omitempty"`
+		Retries          uint32              `json:"retries,omitempty"`
 	}{
 		Statement:        e.statement,
 		Errors:           e.errors,
@@ -112,9 +112,9 @@ func (e AnalyticsError) Error() string {
 }
 
 // Unwrap returns the underlying reason for the error.
-func (e AnalyticsError) Unwrap() error {
+func (e InsightsError) Unwrap() error {
 	if e.cause == nil {
-		return ErrAnalytics
+		return ErrInsights
 	}
 
 	return e.cause
@@ -123,7 +123,7 @@ func (e AnalyticsError) Unwrap() error {
 // QueryError occurs when an error is returned in the errors field of the response body of a response
 // from the query server.
 type QueryError struct {
-	cause   *AnalyticsError
+	cause   *InsightsError
 	code    int
 	message string
 }
@@ -148,7 +148,7 @@ func (e QueryError) Unwrap() error {
 	return e.cause
 }
 
-func (e QueryError) withErrors(errors []analyticsErrorDesc) *QueryError {
+func (e QueryError) withErrors(errors []insightsErrorDesc) *QueryError {
 	e.cause.errors = errors
 
 	return &e
@@ -161,7 +161,7 @@ func newQueryError(cause error, statement, endpoint string, statusCode int, code
 	}
 
 	return QueryError{
-		cause: &AnalyticsError{
+		cause: &InsightsError{
 			cause:            cause,
 			errors:           nil,
 			statement:        statement,

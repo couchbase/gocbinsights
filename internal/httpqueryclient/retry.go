@@ -67,7 +67,7 @@ func doWithRetries[T any](
 ) (*T, error) {
 	addrs, err := c.resolver.LookupHost(ctx, c.host)
 	if err != nil {
-		return nil, newAnalyticsError(fmt.Errorf("failed to lookup host: %w", err), opts.statement, c.host, 0, 0)
+		return nil, newQueryError(fmt.Errorf("failed to lookup host: %w", err), opts.statement, c.host, 0, 0)
 	}
 
 	state := &retryState{
@@ -76,7 +76,7 @@ func doWithRetries[T any](
 		lastRootErr: nil,
 		retries:     0,
 		uniqueID:    uuid.NewString(),
-		backoff:     analyticsExponentialBackoffWithJitter(100*time.Millisecond, 1*time.Minute, 2),
+		backoff:     exponentialBackoffWithJitter(100*time.Millisecond, 1*time.Minute, 2),
 		addrs:       addrs,
 		body:        opts.body,
 	}
@@ -84,7 +84,7 @@ func doWithRetries[T any](
 	for {
 		// We use > here as this check is at the top of the loop, so we want to allow the nth retry to be made.
 		if state.retries > opts.maxRetries {
-			// This could be a query error or a platform error, either way we don't wrap it in an analytics error.
+			// This could be a query error or a platform error, either way we don't wrap it in an insights error.
 			return nil, state.lastRootErr
 		}
 
@@ -130,7 +130,7 @@ func doWithRetries[T any](
 			// We don't want to bail out on connection errors as they may be because of dial timeout.
 			if connectDoneErr == nil {
 				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-					return nil, newAnalyticsError(err, opts.statement, c.host, 0, state.retries).
+					return nil, newQueryError(err, opts.statement, c.host, 0, state.retries).
 						withLastDetail(state.lastCode, state.lastMessage)
 				}
 			}
@@ -138,7 +138,7 @@ func doWithRetries[T any](
 			newBody, notRetriableErr := c.handleMaybeRetry(ctx, state.uniqueID, opts.serverDeadline,
 				state.backoff, state.retries, opts.payload)
 			if notRetriableErr != nil {
-				return nil, newAnalyticsError(notRetriableErr, opts.statement, c.host, 0, state.retries).
+				return nil, newQueryError(notRetriableErr, opts.statement, c.host, 0, state.retries).
 					withLastDetail(state.lastCode, state.lastMessage)
 			}
 
@@ -178,7 +178,7 @@ func doWithRetries[T any](
 					}
 				}
 
-				return nil, newAnalyticsError(retryErr, opts.statement, c.host, resp.StatusCode, state.retries).
+				return nil, newQueryError(retryErr, opts.statement, c.host, resp.StatusCode, state.retries).
 					withLastDetail(state.lastCode, state.lastMessage)
 			}
 
@@ -263,7 +263,7 @@ func (c *Client) handleMaybeRetry(ctx context.Context, reqID string, serverDeadl
 
 type backoffCalculator func(retryAttempts uint32) time.Duration
 
-func analyticsExponentialBackoffWithJitter(min, max time.Duration, backoffFactor float64) backoffCalculator { //nolint:revive
+func exponentialBackoffWithJitter(min, max time.Duration, backoffFactor float64) backoffCalculator { //nolint:revive
 	var minBackoff float64 = 1000000 // 1 Millisecond
 
 	var maxBackoff float64 = 500000000 // 500 Milliseconds

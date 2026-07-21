@@ -2,7 +2,7 @@ package httpqueryclient
 
 import "net/http"
 
-// QueryOptions is the set of options available to an Analytics query.
+// QueryOptions is the set of options available to an Operational Insights query.
 type QueryOptions struct {
 	// Payload represents the JSON payload to be sent to the query server.
 	Payload map[string]interface{}

@@ -28,7 +28,7 @@ type QueryMetadata struct {
 
 // QueryResult allows access to the results of a query.
 type QueryResult struct {
-	reader analyticsRowReader
+	reader queryRowReader
 
 	unmarshaler Unmarshaler
 }
@@ -121,7 +121,7 @@ func BufferQueryResult[T any](result *QueryResult) ([]T, *QueryMetadata, error) 
 	return buffered, meta, nil
 }
 
-type analyticsRowReader interface {
+type queryRowReader interface {
 	NextRow() []byte
 	MetaData() (*QueryMetadata, error)
 	Close() error

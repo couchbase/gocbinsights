@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestQueryErrorAsAnalyticsError(t *testing.T) {
+func TestQueryErrorAsInsightsError(t *testing.T) {
 	err := newQueryError(nil, "select *", "endpoint", 200, 23, "message", 0)
 
-	var analyticsError *AnalyticsError
+	var insightsError *InsightsError
 
-	require.ErrorAs(t, err, &analyticsError)
+	require.ErrorAs(t, err, &insightsError)
 }
 
 func TestQueryErrorIsErrQuery(t *testing.T) {

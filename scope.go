@@ -1,6 +1,6 @@
 package cbinsights
 
-// Scope represents an Analytics scope.
+// Scope represents an Operational Insights scope.
 type Scope struct {
 	client scopeClient
 }

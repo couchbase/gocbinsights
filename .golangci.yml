@@ -15,7 +15,7 @@ linters:
         - github.com/couchbase/internal
         - crypto/x509
       ignore-interface-regexps:
-        - "analyticsRowReader"
+        - "queryRowReader"
         - "queryClient"
         - "clusterClient"
   exclusions:

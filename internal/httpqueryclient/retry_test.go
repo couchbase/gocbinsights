@@ -20,8 +20,8 @@ import (
 	"github.com/couchbase/gocbinsights/internal/logging"
 )
 
-// analyticsResponse builds a JSON analytics response body with optional fields.
-func analyticsResponse(opts ...func(m map[string]interface{})) []byte {
+// queryResponse builds a JSON query response body with optional fields.
+func queryResponse(opts ...func(m map[string]interface{})) []byte {
 	m := map[string]interface{}{
 		"status":  "success",
 		"results": []interface{}{},
@@ -42,7 +42,7 @@ func withResults(rows ...interface{}) func(m map[string]interface{}) {
 	}
 }
 
-func withErrors(errs ...jsonAnalyticsError) func(m map[string]interface{}) {
+func withErrors(errs ...jsonInsightsError) func(m map[string]interface{}) {
 	return func(m map[string]interface{}) {
 		m["errors"] = errs
 	}
@@ -54,12 +54,12 @@ func withStatus(status string) func(m map[string]interface{}) {
 	}
 }
 
-func retriableError(code uint32, msg string) jsonAnalyticsError {
-	return jsonAnalyticsError{Code: code, Msg: msg, Retry: true}
+func retriableError(code uint32, msg string) jsonInsightsError {
+	return jsonInsightsError{Code: code, Msg: msg, Retry: true}
 }
 
-func nonRetriableError(code uint32, msg string) jsonAnalyticsError {
-	return jsonAnalyticsError{Code: code, Msg: msg, Retry: false}
+func nonRetriableError(code uint32, msg string) jsonInsightsError {
+	return jsonInsightsError{Code: code, Msg: msg, Retry: false}
 }
 
 func mustWrite(t *testing.T, w http.ResponseWriter, data []byte) {
@@ -95,7 +95,7 @@ func TestQueryRetries_RetriableErrorsThenSuccess(t *testing.T) {
 		n := atomic.AddInt32(&attempt, 1)
 		if n <= 2 {
 			w.WriteHeader(200)
-			mustWrite(t, w, analyticsResponse(
+			mustWrite(t, w, queryResponse(
 				withStatus("fatal"),
 				withErrors(retriableError(23001, "temporarily unavailable")),
 			))
@@ -104,7 +104,7 @@ func TestQueryRetries_RetriableErrorsThenSuccess(t *testing.T) {
 		}
 
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(withResults(1, 2, 3)))
+		mustWrite(t, w, queryResponse(withResults(1, 2, 3)))
 	}))
 	defer srv.Close()
 
@@ -135,7 +135,7 @@ func TestQueryRetries_NonRetriableErrorNoRetry(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		atomic.AddInt32(&attempt, 1)
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(
+		mustWrite(t, w, queryResponse(
 			withStatus("fatal"),
 			withErrors(nonRetriableError(24000, "syntax error")),
 		))
@@ -154,7 +154,7 @@ func TestQueryRetries_NonRetriableErrorNoRetry(t *testing.T) {
 		MaxRetries:  5,
 	})
 	require.Error(t, err)
-	require.True(t, errors.Is(err, ErrAnalytics))
+	require.True(t, errors.Is(err, ErrInsights))
 
 	require.Equal(t, int32(1), atomic.LoadInt32(&attempt), "should not retry on non-retriable error")
 }
@@ -165,7 +165,7 @@ func TestQueryRetries_MaxRetriesExhausted(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		atomic.AddInt32(&attempt, 1)
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(
+		mustWrite(t, w, queryResponse(
 			withStatus("fatal"),
 			withErrors(retriableError(23001, "temporarily unavailable")),
 		))
@@ -204,7 +204,7 @@ func TestQueryRetries_HTTPErrorRetriable(t *testing.T) {
 		}
 
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(withResults(42)))
+		mustWrite(t, w, queryResponse(withResults(42)))
 	}))
 	defer srv.Close()
 
@@ -317,7 +317,7 @@ func TestHandleRetries_DiscardResults_RetriableThenSuccess(t *testing.T) {
 		n := atomic.AddInt32(&attempt, 1)
 		if n <= 1 {
 			w.WriteHeader(500)
-			mustWrite(t, w, analyticsResponse(
+			mustWrite(t, w, queryResponse(
 				withStatus("fatal"),
 				withErrors(retriableError(23001, "temporarily unavailable")),
 			))
@@ -394,7 +394,7 @@ func TestHandleRetries_CancelHandle_NonRetriableNoRetry(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		atomic.AddInt32(&attempt, 1)
 		w.WriteHeader(400)
-		mustWrite(t, w, analyticsResponse(
+		mustWrite(t, w, queryResponse(
 			withStatus("fatal"),
 			withErrors(nonRetriableError(24000, "bad request")),
 		))
@@ -503,7 +503,7 @@ func TestHandleRetries_StreamResults_RetriableErrorInBody(t *testing.T) {
 		n := atomic.AddInt32(&attempt, 1)
 		if n <= 1 {
 			w.WriteHeader(500)
-			mustWrite(t, w, analyticsResponse(
+			mustWrite(t, w, queryResponse(
 				withStatus("fatal"),
 				withErrors(retriableError(23001, "temporarily unavailable")),
 			))
@@ -609,7 +609,7 @@ func TestRetries_AuthHeaderSentOnEveryAttempt(t *testing.T) {
 		}
 
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(withResults(1)))
+		mustWrite(t, w, queryResponse(withResults(1)))
 	}))
 	defer srv.Close()
 
@@ -643,7 +643,7 @@ func TestRetries_ContextCancelledDuringRetry(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		atomic.AddInt32(&attempt, 1)
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(
+		mustWrite(t, w, queryResponse(
 			withStatus("fatal"),
 			withErrors(retriableError(23001, "temporarily unavailable")),
 		))
@@ -682,7 +682,7 @@ func TestQueryRetries_MixedRetriableAndNonRetriable_NoRetry(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		atomic.AddInt32(&attempt, 1)
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(
+		mustWrite(t, w, queryResponse(
 			withStatus("fatal"),
 			withErrors(
 				retriableError(23001, "temporarily unavailable"),
@@ -717,7 +717,7 @@ func TestQueryRetries_ZeroMaxRetries(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		atomic.AddInt32(&attempt, 1)
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(
+		mustWrite(t, w, queryResponse(
 			withStatus("fatal"),
 			withErrors(retriableError(23001, "temporarily unavailable")),
 		))
@@ -796,7 +796,7 @@ func TestQueryRetries_ConnectionRefused(t *testing.T) {
 func TestQueryRetries_RetryCountInError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(
+		mustWrite(t, w, queryResponse(
 			withStatus("fatal"),
 			withErrors(retriableError(23001, "temporarily unavailable")),
 		))
@@ -861,7 +861,7 @@ func TestQueryRetries_RequestsDistributedAcrossAddresses(t *testing.T) {
 		}
 
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(withResults("ok")))
+		mustWrite(t, w, queryResponse(withResults("ok")))
 	}))
 	defer srv.Close()
 
@@ -900,7 +900,7 @@ func TestRetries_HostHeaderSetCorrectly(t *testing.T) {
 		}
 
 		w.WriteHeader(200)
-		mustWrite(t, w, analyticsResponse(withResults(1)))
+		mustWrite(t, w, queryResponse(withResults(1)))
 	}))
 	defer srv.Close()
 

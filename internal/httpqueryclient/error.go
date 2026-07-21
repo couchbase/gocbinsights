@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	// ErrAnalytics occurs from a client-server interaction with the Analytics service.
-	ErrAnalytics = errors.New("analytics error")
+	// ErrInsights occurs from a client-server interaction with the Operational Insights service.
+	ErrInsights = errors.New("operational insights error")
 
 	// ErrContextDeadlineWouldBeExceeded is returned when a Deadline set on an operation
 	// would be exceeded if the operation were sent to the server. It wraps
@@ -25,11 +25,11 @@ var (
 	// ErrInvalidCredential occurs when an invalid set of credentials is provided for a service.
 	ErrInvalidCredential = errors.New("an invalid set of credentials was provided")
 
-	// ErrServiceUnavailable occurs when the Analytics service, or a part of the system in the path to it, is unavailable.
+	// ErrServiceUnavailable occurs when the Operational Insights service, or a part of the system in the path to it, is unavailable.
 	ErrServiceUnavailable = errors.New("service unavailable")
 )
 
-// ErrorDesc represents specific Analytics error data.
+// ErrorDesc represents specific Operational Insights error data.
 type ErrorDesc struct {
 	Code    uint32
 	Message string
@@ -52,7 +52,7 @@ func (e ErrorDesc) MarshalJSON() ([]byte, error) {
 	return b, nil
 }
 
-// QueryError represents an error returned from an Analytics query.
+// QueryError represents an error returned from an Operational Insights query.
 type QueryError struct {
 	InnerError       error
 	Statement        string
@@ -65,7 +65,7 @@ type QueryError struct {
 	Retries          uint32
 }
 
-func newAnalyticsError(innerError error, statement string, endpoint string, responseCode int, retries uint32) *QueryError {
+func newQueryError(innerError error, statement string, endpoint string, responseCode int, retries uint32) *QueryError {
 	return &QueryError{
 		InnerError:       innerError,
 		Statement:        statement,

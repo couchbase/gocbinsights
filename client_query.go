@@ -180,7 +180,7 @@ func (c *clientRowReader) MetaData() (*QueryMetadata, error) {
 		return nil, translateClientError(err)
 	}
 
-	var jsonResp jsonAnalyticsResponse
+	var jsonResp jsonQueryResponse
 
 	err = json.Unmarshal(metaBytes, &jsonResp)
 	if err != nil {
@@ -243,15 +243,15 @@ func translateClientError(err error) error {
 			baseErr = context.DeadlineExceeded
 		}
 
-		return newAnalyticsError(baseErr, clientErr.Statement, clientErr.Endpoint, clientErr.HTTPResponseCode, clientErr.Retries).
+		return newInsightsError(baseErr, clientErr.Statement, clientErr.Endpoint, clientErr.HTTPResponseCode, clientErr.Retries).
 			withMessage(clientErr.InnerError.Error())
 	}
 
-	var firstNonRetriableErr *analyticsErrorDesc
+	var firstNonRetriableErr *insightsErrorDesc
 
-	descs := make([]analyticsErrorDesc, len(clientErr.Errors))
+	descs := make([]insightsErrorDesc, len(clientErr.Errors))
 	for i, desc := range clientErr.Errors {
-		descs[i] = analyticsErrorDesc{
+		descs[i] = insightsErrorDesc{
 			Code:    desc.Code,
 			Message: desc.Message,
 		}
@@ -382,18 +382,18 @@ func (c *httpQueryClient) StartQuery(ctx context.Context, statement string, opts
 		return nil, translateClientError(err)
 	}
 
-	var jsonResp jsonAnalyticsResponse
+	var jsonResp jsonQueryResponse
 	if err := json.Unmarshal(metaBytes, &jsonResp); err != nil {
 		return nil, fmt.Errorf("failed to parse async query response: %w", err) //nolint:err113
 	}
 
 	if jsonResp.Handle == "" {
-		return nil, newAnalyticsError(ErrAnalytics, statement, c.client.Host(), 0, 0).
+		return nil, newInsightsError(ErrInsights, statement, c.client.Host(), 0, 0).
 			withMessage("async query response did not contain a handle")
 	}
 
 	if jsonResp.RequestID == "" {
-		return nil, newAnalyticsError(ErrAnalytics, statement, c.client.Host(), 0, 0).
+		return nil, newInsightsError(ErrInsights, statement, c.client.Host(), 0, 0).
 			withMessage("async query response did not contain a request id")
 	}
 
@@ -485,19 +485,19 @@ func (c *httpQueryClient) translateHandleError(err error) error {
 	case errors.Is(err, httpqueryclient.ErrQueryNotFound):
 		var qerr *httpqueryclient.QueryError
 		if errors.As(err, &qerr) {
-			return newAnalyticsError(ErrQueryNotFound, qerr.Statement, qerr.Endpoint, qerr.HTTPResponseCode, qerr.Retries).
+			return newInsightsError(ErrQueryNotFound, qerr.Statement, qerr.Endpoint, qerr.HTTPResponseCode, qerr.Retries).
 				withMessage("query handle not found")
 		}
 
-		return newAnalyticsError(ErrQueryNotFound, "", c.client.Host(), 0, 0).
+		return newInsightsError(ErrQueryNotFound, "", c.client.Host(), 0, 0).
 			withMessage("query handle not found")
 	case errors.Is(err, httpqueryclient.ErrInvalidCredential):
 		var qerr *httpqueryclient.QueryError
 		if errors.As(err, &qerr) {
-			return newAnalyticsError(ErrInvalidCredential, qerr.Statement, qerr.Endpoint, qerr.HTTPResponseCode, qerr.Retries)
+			return newInsightsError(ErrInvalidCredential, qerr.Statement, qerr.Endpoint, qerr.HTTPResponseCode, qerr.Retries)
 		}
 
-		return newAnalyticsError(ErrInvalidCredential, "", c.client.Host(), 0, 0)
+		return newInsightsError(ErrInvalidCredential, "", c.client.Host(), 0, 0)
 	default:
 		return translateClientError(err)
 	}
@@ -511,7 +511,7 @@ func (c *httpQueryClient) fetchHandleStatus(ctx context.Context, handle string) 
 
 	var statusResp jsonHandleStatusResponse
 	if err := json.Unmarshal(respBody, &statusResp); err != nil {
-		return nil, newAnalyticsError(ErrAnalytics, "", c.client.Host(), 0, 0).
+		return nil, newInsightsError(ErrInsights, "", c.client.Host(), 0, 0).
 			withMessage("failed to parse handle status response")
 	}
 
@@ -544,16 +544,16 @@ func (c *httpQueryClient) buildHandleStatusError(statusResp *jsonHandleStatusRes
 	endpoint := c.client.Host()
 
 	if len(statusResp.Errors) == 0 {
-		return newAnalyticsError(ErrAnalytics, "", endpoint, 0, 0).
+		return newInsightsError(ErrInsights, "", endpoint, 0, 0).
 			withMessage(fmt.Sprintf("query ended with status: %s", statusResp.Status))
 	}
 
-	descs := make([]analyticsErrorDesc, len(statusResp.Errors))
+	descs := make([]insightsErrorDesc, len(statusResp.Errors))
 
-	var firstNonRetriable *analyticsErrorDesc
+	var firstNonRetriable *insightsErrorDesc
 
 	for i, e := range statusResp.Errors {
-		descs[i] = analyticsErrorDesc{
+		descs[i] = insightsErrorDesc{
 			Code:    e.Code,
 			Message: e.Message,
 		}

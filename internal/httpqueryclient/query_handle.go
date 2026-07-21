@@ -46,9 +46,9 @@ func (c *Client) handleResponseHandler(resp *http.Response, state *retryState) (
 		}, retryActionReturn, nil
 	}
 
-	cErr := parseAnalyticsErrorResponse(respBody, "", c.host, resp.StatusCode, state.lastCode, state.lastMessage, state.retries)
+	cErr := parseQueryErrorResponse(respBody, "", c.host, resp.StatusCode, state.lastCode, state.lastMessage, state.retries)
 	if cErr != nil {
-		first, retriable := isAnalyticsErrorRetriable(cErr)
+		first, retriable := isQueryErrorRetriable(cErr)
 		if !retriable {
 			return nil, retryActionReturn, cErr
 		}
@@ -61,13 +61,13 @@ func (c *Client) handleResponseHandler(resp *http.Response, state *retryState) (
 		}
 
 		// Return the enriched error in case retry is denied.
-		return nil, retryActionRetry, newAnalyticsError(cErr.InnerError, "", c.host, resp.StatusCode, state.retries).
+		return nil, retryActionRetry, newQueryError(cErr.InnerError, "", c.host, resp.StatusCode, state.retries).
 			withErrors(cErr.Errors).
 			withErrorText(string(respBody)).
 			withLastDetail(state.lastCode, state.lastMessage)
 	}
 
-	return nil, retryActionReturn, newAnalyticsError(ErrAnalytics, "", c.host, resp.StatusCode, state.retries).
+	return nil, retryActionReturn, newQueryError(ErrInsights, "", c.host, resp.StatusCode, state.retries).
 		withErrorText(string(respBody))
 }
 
@@ -186,9 +186,9 @@ func (c *Client) handleStreamHandleResponse(resp *http.Response, state *retrySta
 			return nil, retryActionReturn, newObfuscateErrorWrapper("failed to read response body", readErr)
 		}
 
-		cErr := parseAnalyticsErrorResponse(respBody, "", c.host, resp.StatusCode, state.lastCode, state.lastMessage, state.retries)
+		cErr := parseQueryErrorResponse(respBody, "", c.host, resp.StatusCode, state.lastCode, state.lastMessage, state.retries)
 		if cErr != nil {
-			first, retriable := isAnalyticsErrorRetriable(cErr)
+			first, retriable := isQueryErrorRetriable(cErr)
 			if !retriable {
 				return nil, retryActionReturn, cErr
 			}
@@ -200,18 +200,18 @@ func (c *Client) handleStreamHandleResponse(resp *http.Response, state *retrySta
 				state.lastMessage = first.Message
 			}
 
-			return nil, retryActionRetry, newAnalyticsError(cErr.InnerError, "", c.host, resp.StatusCode, state.retries).
+			return nil, retryActionRetry, newQueryError(cErr.InnerError, "", c.host, resp.StatusCode, state.retries).
 				withErrors(cErr.Errors).
 				withErrorText(string(respBody)).
 				withLastDetail(state.lastCode, state.lastMessage)
 		}
 
 		if resp.StatusCode == 404 {
-			return nil, retryActionReturn, newAnalyticsError(ErrQueryNotFound, "", c.host, resp.StatusCode, state.retries).
+			return nil, retryActionReturn, newQueryError(ErrQueryNotFound, "", c.host, resp.StatusCode, state.retries).
 				withErrorText(string(respBody))
 		}
 
-		return nil, retryActionReturn, newAnalyticsError(ErrAnalytics, "", c.host, resp.StatusCode, state.retries).
+		return nil, retryActionReturn, newQueryError(ErrInsights, "", c.host, resp.StatusCode, state.retries).
 			withErrorText(string(respBody))
 	}
 
@@ -234,7 +234,7 @@ func (c *Client) handleStreamHandleResponse(resp *http.Response, state *retrySta
 func maybeQueryNotFoundError(err error) error {
 	var qErr *QueryError
 	if errors.As(err, &qErr) && qErr.HTTPResponseCode == 404 {
-		return newAnalyticsError(ErrQueryNotFound, qErr.Statement, qErr.Endpoint, qErr.HTTPResponseCode, qErr.Retries).
+		return newQueryError(ErrQueryNotFound, qErr.Statement, qErr.Endpoint, qErr.HTTPResponseCode, qErr.Retries).
 			withErrorText(qErr.ErrorText)
 	}
 

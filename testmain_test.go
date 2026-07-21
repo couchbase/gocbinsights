@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 
 	leakcheck.EnableAll()
 
-	setupAnalytics()
+	setupOperationalInsights()
 
 	result := m.Run()
 
@@ -111,7 +111,7 @@ func TestMain(m *testing.M) {
 	os.Exit(result)
 }
 
-func setupAnalytics() {
+func setupOperationalInsights() {
 	cluster, err := cbinsights.NewCluster(TestOpts.OriginalConnStr, cbinsights.NewBasicAuthCredential(TestOpts.Username, TestOpts.Password), DefaultOptions())
 	if err != nil {
 		panic(err)

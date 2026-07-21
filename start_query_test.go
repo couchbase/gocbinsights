@@ -270,9 +270,9 @@ func TestStartQueryError(t *testing.T) {
 		_, err := queryable.StartQuery(ctx, "SELEC 123;")
 		require.ErrorIs(tt, err, cbinsights.ErrQuery)
 
-		var analyticsErr *cbinsights.AnalyticsError
+		var insightsErr *cbinsights.InsightsError
 
-		require.ErrorAs(tt, err, &analyticsErr)
+		require.ErrorAs(tt, err, &insightsErr)
 
 		var queryErr *cbinsights.QueryError
 

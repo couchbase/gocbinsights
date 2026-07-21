@@ -1,6 +1,6 @@
 package cbinsights
 
-// QueryScanConsistency indicates the level of data consistency desired for an analytics query.
+// QueryScanConsistency indicates the level of data consistency desired for an Operational Insights query.
 type QueryScanConsistency uint
 
 const (
@@ -10,7 +10,7 @@ const (
 	QueryScanConsistencyRequestPlus
 )
 
-// QueryOptions is the set of options available to an Analytics query.
+// QueryOptions is the set of options available to an Operational Insights query.
 type QueryOptions struct {
 	// ClientContextID is an optional identifier for the query.
 	ClientContextID *string
@@ -110,7 +110,7 @@ func (opts *QueryOptions) SetMaxRetries(maxRetries uint32) *QueryOptions {
 	return opts
 }
 
-// StartQueryOptions is the set of options available to an Analytics query.
+// StartQueryOptions is the set of options available to an Operational Insights query.
 type StartQueryOptions struct {
 	// ClientContextID is an optional identifier for the query.
 	ClientContextID *string

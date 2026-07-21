@@ -1,6 +1,6 @@
-// Package cbinsights provides an SDK for interacting with Couchbase Analytics clusters.
+// Package cbinsights provides an SDK for interacting with Couchbase Operational Insights clusters.
 // The main entry point for the SDK is the Cluster struct, which allows users to perform operations on the data against
-// a Couchbase Enterprise Analytics cluster.
+// a Couchbase Operational Insights cluster.
 // The Cluster struct is created using the NewCluster function, which takes an HTTP endpoint, a credential for
 // authentication, and optional cluster options.
 package cbinsights
@@ -12,7 +12,7 @@ import (
 )
 
 // Cluster is the main entry point for the SDK.
-// It is used to perform operations on the data against a Couchbase Analytics cluster.
+// It is used to perform operations on the data against a Couchbase Operational Insights cluster.
 type Cluster struct {
 	client clusterClient
 }
