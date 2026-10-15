@@ -118,7 +118,7 @@ See the `testmain_test.go` file for more information on command line arguments.
 
 ## Linting
 
-Linting is performed used `golangci-lint`.
+Linting is performed using `golangci-lint`.
 To run:
 
 `golangci-lint run`
@@ -129,5 +129,5 @@ Copyright 2026 Couchbase Inc.
 Licensed under the Apache License, Version 2.0.
 
 See
-[LICENSE](https://github.com/couchbase/cbinsights/blob/main/LICENSE)
+[LICENSE](https://github.com/couchbase/gocbinsights/blob/main/LICENSE)
 for further details.
